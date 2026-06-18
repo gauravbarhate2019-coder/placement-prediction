@@ -86,12 +86,22 @@ if st.button("🔮 Predict Placement", use_container_width=True):
     prediction = model.predict(features_scaled)[0]
     probability = model.predict_proba(features_scaled)[0]
     prob_placed = probability[1] * 100
+    if prob_placed >= 80:
+    level = "🌟 Excellent"
+elif prob_placed >= 60:
+    level = "✅ Good"
+elif prob_placed >= 40:
+    level = "⚠️ Average"
+else:
+    level = "❌ Needs Improvement"
 
     # ── Result ────────────────────────────────────────────────────────────────
     st.markdown("### 📊 Prediction Result")
 
     st.write(f"👨 Student : {name}")
     st.write(f"🏫 College : {college}")
+
+    st.info(f"Placement Readiness : {level}")
 
     if prediction == 1:
         st.success(f"✅ **PLACED** — {prob_placed:.1f}% confidence")
