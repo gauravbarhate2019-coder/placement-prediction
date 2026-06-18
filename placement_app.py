@@ -18,20 +18,20 @@ st.set_page_config(
 @st.cache_resource
 def load_model():
     import os
+    import subprocess
+
     if not os.path.exists('models/preprocessed.pkl'):
-        # Auto-generate model if not found
-        import subprocess
         subprocess.run(['python', 'step1_generate_data.py'])
         subprocess.run(['python', 'step3_preprocess.py'])
         subprocess.run(['python', 'step4_train_models.py'])
-    
-   with open('models/preprocessed.pkl', 'rb') as f:
-    data = pickle.load(f)
 
-with open('models/best_model.pkl', 'rb') as f:
-    best = pickle.load(f)
+    with open('models/preprocessed.pkl', 'rb') as f:
+        data = pickle.load(f)
 
-return data, best['model']
+    with open('models/best_model.pkl', 'rb') as f:
+        best = pickle.load(f)
+
+    return data, best['model']
 
 
 # Load model and preprocessing objects
