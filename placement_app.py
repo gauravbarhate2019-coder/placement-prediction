@@ -25,11 +25,13 @@ def load_model():
         subprocess.run(['python', 'step3_preprocess.py'])
         subprocess.run(['python', 'step4_train_models.py'])
     
-    with open('models/preprocessed.pkl', 'rb') as f:
-        data = pickle.load(f)
-    with open('models/best_model.pkl', 'rb') as f:
-        best = pickle.load(f)
-    return data, best
+   with open('models/preprocessed.pkl', 'rb') as f:
+    data = pickle.load(f)
+
+with open('models/best_model.pkl', 'rb') as f:
+    best = pickle.load(f)
+
+return data, best['model']
 
 
 # Load model and preprocessing objects
