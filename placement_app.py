@@ -50,6 +50,9 @@ st.markdown("---")
 # ── Input form ────────────────────────────────────────────────────────────────
 st.subheader("📋 Enter Student Details")
 
+name = st.text_input("Student Name")
+college = st.text_input("College Name")
+
 col1, col2 = st.columns(2)
 
 with col1:
