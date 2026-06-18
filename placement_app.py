@@ -17,18 +17,19 @@ st.set_page_config(
 # ── Load model & preprocessor ─────────────────────────────────────────────────
 @st.cache_resource
 def load_model():
+    import os
+    if not os.path.exists('models/preprocessed.pkl'):
+        # Auto-generate model if not found
+        import subprocess
+        subprocess.run(['python', 'step1_generate_data.py'])
+        subprocess.run(['python', 'step3_preprocess.py'])
+        subprocess.run(['python', 'step4_train_models.py'])
+    
     with open('models/preprocessed.pkl', 'rb') as f:
         data = pickle.load(f)
     with open('models/best_model.pkl', 'rb') as f:
         best = pickle.load(f)
     return data, best
-
-data, best = load_model()
-scaler    = data['scaler']
-le_branch = data['le_branch']
-le_gender = data['le_gender']
-model     = best['model']
-model_name = best['name']
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.title("🎓 Student Placement Predictor")
