@@ -87,13 +87,13 @@ if st.button("🔮 Predict Placement", use_container_width=True):
     probability = model.predict_proba(features_scaled)[0]
     prob_placed = probability[1] * 100
     if prob_placed >= 80:
-    level = "🌟 Excellent"
-elif prob_placed >= 60:
-    level = "✅ Good"
-elif prob_placed >= 40:
-    level = "⚠️ Average"
-else:
-    level = "❌ Needs Improvement"
+        level = "🌟 Excellent"
+    elif prob_placed >= 60:
+        level = "✅ Good"
+    elif prob_placed >= 40:
+        level = "⚠️ Average"
+    else:
+        level = "❌ Needs Improvement"
 
     # ── Result ────────────────────────────────────────────────────────────────
     st.markdown("### 📊 Prediction Result")
