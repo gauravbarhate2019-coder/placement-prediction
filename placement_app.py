@@ -1,3 +1,6 @@
+import plotly.express as px
+import pandas as pd
+
 """
 STREAMLIT WEB APP — Student Placement Predictor
 Run with: streamlit run app.py
@@ -114,6 +117,20 @@ if st.button("🔮 Predict Placement", use_container_width=True):
     col_a, col_b = st.columns(2)
     col_a.metric("Placed",     f"{prob_placed:.1f}%")
     col_b.metric("Not Placed", f"{100 - prob_placed:.1f}%")
+
+    chart_data = pd.DataFrame({
+    "Status": ["Placed", "Not Placed"],
+    "Value": [prob_placed, 100 - prob_placed]
+})
+
+fig = px.pie(
+    chart_data,
+    names="Status",
+    values="Value",
+    title="Placement Probability Distribution"
+)
+
+st.plotly_chart(fig, use_container_width=True)
 
     # ── Advice ────────────────────────────────────────────────────────────────
     advice = []
