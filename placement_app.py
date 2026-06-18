@@ -33,7 +33,7 @@ def load_model():
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.title("🎓 Student Placement Predictor")
-st.markdown(f"**Model:** {model_name} &nbsp;|&nbsp; **Accuracy:** 83%")
+st.markdown(f"**Model:** Logistic Regression &nbsp;|&nbsp; **Accuracy:** 83%")
 st.markdown("---")
 
 # ── Input form ────────────────────────────────────────────────────────────────
