@@ -90,6 +90,9 @@ if st.button("🔮 Predict Placement", use_container_width=True):
     # ── Result ────────────────────────────────────────────────────────────────
     st.markdown("### 📊 Prediction Result")
 
+    st.write(f"👨 Student : {name}")
+    st.write(f"🏫 College : {college}")
+
     if prediction == 1:
         st.success(f"✅ **PLACED** — {prob_placed:.1f}% confidence")
     else:
