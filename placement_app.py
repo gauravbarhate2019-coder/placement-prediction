@@ -31,6 +31,18 @@ def load_model():
         best = pickle.load(f)
     return data, best
 
+return data, best
+
+# Load model and preprocessing objects
+data, model = load_model()
+
+scaler = data['scaler']
+le_branch = data['le_branch']
+le_gender = data['le_gender']
+
+# Header
+st.title("🎓 Student Placement Predictor")
+
 # ── Header ────────────────────────────────────────────────────────────────────
 st.title("🎓 Student Placement Predictor")
 st.markdown(f"**Model:** Logistic Regression &nbsp;|&nbsp; **Accuracy:** 83%")
