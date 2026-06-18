@@ -132,22 +132,35 @@ fig = px.pie(
 
 st.plotly_chart(fig, use_container_width=True)
 
-    # ── Advice ────────────────────────────────────────────────────────────────
-    advice = []
-    if cgpa < 7.0:          advice.append("📈 Improve CGPA above 7.0")
-    if internships == 0:    advice.append("💼 Do at least 1 internship")
-    if skills_score < 7:    advice.append("💻 Increase technical skills")
-    if backlogs > 1:        advice.append("📚 Clear your backlogs")
-    if communication < 6:   advice.append("🗣️ Work on communication skills")
-    if projects < 2:        advice.append("🛠️ Build more projects (aim for 3+)")
+ # ── Advice ───────────────────────────────────
+advice = []
 
-    st.markdown("### 💡 Improvement Advice")
-    if advice:
-        for tip in advice:
-            st.warning(tip)
-    else:
-        st.success("🌟 You look well-prepared! Keep it up.")
+if cgpa < 7.0:
+    advice.append("📈 Improve CGPA above 7.0")
 
+if internships == 0:
+    advice.append("💼 Do at least 1 internship")
+
+if skills_score < 7:
+    advice.append("💻 Increase technical skills")
+
+if backlogs > 1:
+    advice.append("📚 Clear your backlogs")
+
+if communication < 6:
+    advice.append("🗣 Work on communication skills")
+
+if projects < 2:
+    advice.append("🛠 Build more projects (aim for 3+)")
+
+st.markdown("### 💡 Improvement Advice")
+
+if advice:
+    for tip in advice:
+        st.warning(tip)
+else:
+    st.success("🌟 You look well-prepared! Keep it up.")
+    
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("---")
 st.caption("Built with Python · scikit-learn · Streamlit · Internship Project")
