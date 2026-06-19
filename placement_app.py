@@ -1,6 +1,6 @@
 """
 STREAMLIT WEB APP — Student Placement Predictor
-Run with: streamlit run placement_app.py
+With 3D Pie Chart using Plotly
 """
 
 import os
@@ -8,6 +8,7 @@ import pickle
 import subprocess
 import numpy as np
 import streamlit as st
+import plotly.graph_objects as go
 
 st.set_page_config(
     page_title="Student Placement Predictor",
@@ -36,19 +37,15 @@ scaler    = data['scaler']
 le_branch = data['le_branch']
 le_gender = data['le_gender']
 
-# ── Header ────────────────────────────────────────────────────────────────────
 st.title("🎓 Student Placement Predictor")
 st.markdown("**Model:** Logistic Regression &nbsp;|&nbsp; **Accuracy:** 83%")
 st.markdown("---")
 
-# ── Input form ────────────────────────────────────────────────────────────────
 st.subheader("📋 Enter Student Details")
-
 name    = st.text_input("Student Name")
 college = st.text_input("College Name")
 
 col1, col2 = st.columns(2)
-
 with col1:
     cgpa         = st.slider("CGPA",           5.0, 10.0, 7.5, 0.1)
     marks_10th   = st.slider("10th Marks (%)", 50.0, 100.0, 75.0, 0.5)
@@ -66,7 +63,6 @@ with col2:
 
 st.markdown("---")
 
-# ── Predict ───────────────────────────────────────────────────────────────────
 if st.button("🔮 Predict Placement", use_container_width=True):
 
     branch_enc = le_branch.transform([branch])[0]
@@ -77,24 +73,19 @@ if st.button("🔮 Predict Placement", use_container_width=True):
                           branch_enc, gender_enc]])
     features_scaled = scaler.transform(features)
 
-    prediction  = model.predict(features_scaled)[0]
-    probability = model.predict_proba(features_scaled)[0]
-    prob_placed = probability[1] * 100
+    prediction      = model.predict(features_scaled)[0]
+    probability     = model.predict_proba(features_scaled)[0]
+    prob_placed     = probability[1] * 100
+    prob_not_placed = probability[0] * 100
 
-    if prob_placed >= 80:
-        level = "🌟 Excellent"
-    elif prob_placed >= 60:
-        level = "✅ Good"
-    elif prob_placed >= 40:
-        level = "⚠️ Average"
-    else:
-        level = "❌ Needs Improvement"
+    if prob_placed >= 80:   level = "🌟 Excellent"
+    elif prob_placed >= 60: level = "✅ Good"
+    elif prob_placed >= 40: level = "⚠️ Average"
+    else:                   level = "❌ Needs Improvement"
 
-    # ── Result ────────────────────────────────────────────────────────────────
     st.markdown("### 📊 Prediction Result")
-
-    if name:    st.write(f"👨 Student : {name}")
-    if college: st.write(f"🏫 College : {college}")
+    if name:    st.write(f"👨 Student : **{name}**")
+    if college: st.write(f"🏫 College : **{college}**")
 
     st.info(f"Placement Readiness : {level}")
     st.metric("🎯 Placement Score", f"{int(prob_placed)}/100")
@@ -106,10 +97,61 @@ if st.button("🔮 Predict Placement", use_container_width=True):
 
     st.markdown("**Placement Probability**")
     st.progress(int(prob_placed))
-
     col_a, col_b = st.columns(2)
     col_a.metric("Placed",     f"{prob_placed:.1f}%")
-    col_b.metric("Not Placed", f"{100 - prob_placed:.1f}%")
+    col_b.metric("Not Placed", f"{prob_not_placed:.1f}%")
+
+    # ── 3D Pie Chart ──────────────────────────────────────────────────────────
+    st.markdown("### 🥧 3D Placement Probability Chart")
+
+    fig = go.Figure(data=[go.Pie(
+        labels=['Placed', 'Not Placed'],
+        values=[prob_placed, prob_not_placed],
+        pull=[0.1, 0],
+        marker=dict(
+            colors=['#4CAF50', '#F44336'],
+            line=dict(color='white', width=2)
+        ),
+        textinfo='label+percent',
+        textfont=dict(size=15, color='white'),
+        rotation=135,
+        direction='clockwise',
+    )])
+
+    fig.update_layout(
+        title=dict(
+            text=f"Placement Probability — {name if name else 'Student'}",
+            x=0.5,
+            font=dict(size=15)
+        ),
+        showlegend=True,
+        legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"),
+        height=420,
+        margin=dict(t=60, b=80, l=20, r=20),
+        paper_bgcolor='rgba(0,0,0,0)',
+        annotations=[dict(
+            text=f"<b>{int(prob_placed)}%</b><br>Placed",
+            x=0.5, y=0.5,
+            font=dict(size=18, color='white'),
+            showarrow=False
+        )]
+    )
+
+    # 3D effect — add outer ring shadow
+    fig.add_trace(go.Pie(
+        labels=['Placed', 'Not Placed'],
+        values=[prob_placed, prob_not_placed],
+        pull=[0.1, 0],
+        marker=dict(colors=['#2E7D32', '#B71C1C'], line=dict(color='white', width=1)),
+        textinfo='none',
+        rotation=135,
+        direction='clockwise',
+        opacity=0.35,
+        domain=dict(x=[0.02, 0.98], y=[0.0, 0.07]),
+        showlegend=False
+    ))
+
+    st.plotly_chart(fig, use_container_width=True)
 
     # ── Advice ────────────────────────────────────────────────────────────────
     advice = []
@@ -127,6 +169,5 @@ if st.button("🔮 Predict Placement", use_container_width=True):
     else:
         st.success("🌟 You look well-prepared! Keep it up.")
 
-# ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("---")
-st.caption("Built with Python · scikit-learn · Streamlit · Internship Project")
+st.caption("Built with Python · scikit-learn · Streamlit · Plotly · Internship Project")
