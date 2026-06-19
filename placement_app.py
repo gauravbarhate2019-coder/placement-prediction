@@ -1,5 +1,5 @@
 """
-STREAMLIT WEB APP — Student Placement Predictor
+STREAMLIT WEB APP — JSPM University Placement Predictor
 With Summary Card + 3D Pie Chart + Feature Impact Chart + Download Report
 """
 
@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 from datetime import datetime
 
 st.set_page_config(
-    page_title="Student Placement Predictor",
+    page_title="JSPM University Placement Predictor",
     page_icon="🎓",
     layout="centered"
 )
@@ -38,7 +38,29 @@ scaler    = data['scaler']
 le_branch = data['le_branch']
 le_gender = data['le_gender']
 
-st.title("🎓 Student Placement Predictor")
+# ── Header with logo ──────────────────────────────────────────────────────────
+import base64
+from pathlib import Path
+
+def get_image_base64(path):
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'jspm_logo.png')
+if os.path.exists(logo_path):
+    logo_b64 = get_image_base64(logo_path)
+    st.markdown(f"""
+    <div style="display:flex; align-items:center; gap:18px; margin-bottom:8px;">
+        <img src="data:image/png;base64,{logo_b64}" width="80" style="border-radius:6px;">
+        <div>
+            <h1 style="margin:0; font-size:26px;">🎓 JSPM University</h1>
+            <h3 style="margin:0; color:#aaa; font-size:16px; font-weight:400;">Student Placement Predictor</h3>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+else:
+    st.title("🎓 JSPM University — Student Placement Predictor")
+
 st.markdown("**Model:** Logistic Regression &nbsp;|&nbsp; **Accuracy:** 83%")
 st.markdown("---")
 
@@ -91,16 +113,23 @@ if st.button("🔮 Predict Placement", use_container_width=True):
 
     # ── Summary Card ──────────────────────────────────────────────────────────
     st.markdown("### 🪪 Student Summary Card")
+    logo_html = ""
+    if os.path.exists(logo_path):
+        logo_html = f'<img src="data:image/png;base64,{logo_b64}" width="48" style="border-radius:4px; margin-right:10px; vertical-align:middle;">'
     st.markdown(f"""
     <div style="background:linear-gradient(135deg,{card_color},#1a1a2e);
                 border:2px solid {badge_color}; border-radius:16px;
                 padding:24px 28px 10px 28px; box-shadow:0 4px 20px rgba(0,0,0,0.4);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div>
-                <h2 style="margin:0; color:white; font-size:24px;">🎓 {name if name else 'Student'}</h2>
-                <p style="margin:4px 0 0 0; color:#ccc; font-size:14px;">
-                    🏫 {college if college else 'College'} &nbsp;|&nbsp; {branch} &nbsp;|&nbsp; {gender}
-                </p>
+            <div style="display:flex; align-items:center;">
+                {logo_html}
+                <div>
+                    <p style="margin:0; color:#ccc; font-size:11px; text-transform:uppercase; letter-spacing:1px;">JSPM University</p>
+                    <h2 style="margin:2px 0 0 0; color:white; font-size:22px;">🎓 {name if name else 'Student'}</h2>
+                    <p style="margin:4px 0 0 0; color:#ccc; font-size:13px;">
+                        🏫 {college if college else 'College'} &nbsp;|&nbsp; {branch} &nbsp;|&nbsp; {gender}
+                    </p>
+                </div>
             </div>
             <div style="background:{badge_color}; color:white; padding:8px 18px;
                         border-radius:20px; font-weight:bold; font-size:15px;">
@@ -241,7 +270,7 @@ if st.button("🔮 Predict Placement", use_container_width=True):
 
     report = f"""
 ╔══════════════════════════════════════════════════════════╗
-║          STUDENT PLACEMENT PREDICTION REPORT            ║
+║     JSPM UNIVERSITY — PLACEMENT PREDICTION REPORT      ║
 ╚══════════════════════════════════════════════════════════╝
 
 Generated On  : {now}
@@ -294,7 +323,7 @@ IMPROVEMENT ADVICE
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Built with Python · scikit-learn · Streamlit · Plotly
-Internship Project — Student Placement Prediction System
+JSPM University — Student Placement Prediction System
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
@@ -309,4 +338,4 @@ Internship Project — Student Placement Prediction System
     )
 
 st.markdown("---")
-st.caption("Built with Python · scikit-learn · Streamlit · Plotly · Internship Project")
+st.caption("JSPM University · Built with Python · scikit-learn · Streamlit · Plotly")
