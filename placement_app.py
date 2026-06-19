@@ -1,14 +1,16 @@
 """
 STREAMLIT WEB APP — Student Placement Predictor
-With Summary Card + 3D Pie Chart + Feature Impact Chart
+With Summary Card + 3D Pie Chart + Feature Impact Chart + Download Report
 """
 
 import os
+import io
 import pickle
 import subprocess
 import numpy as np
 import streamlit as st
 import plotly.graph_objects as go
+from datetime import datetime
 
 st.set_page_config(
     page_title="Student Placement Predictor",
@@ -77,25 +79,22 @@ if st.button("🔮 Predict Placement", use_container_width=True):
     prob_placed     = probability[1] * 100
     prob_not_placed = probability[0] * 100
 
-    if prob_placed >= 80:   level = "🌟 Excellent"
-    elif prob_placed >= 60: level = "✅ Good"
-    elif prob_placed >= 40: level = "⚠️ Average"
-    else:                   level = "❌ Needs Improvement"
+    if prob_placed >= 80:   level = "Excellent"
+    elif prob_placed >= 60: level = "Good"
+    elif prob_placed >= 40: level = "Average"
+    else:                   level = "Needs Improvement"
 
-    result_text = "✅ PLACED" if prediction == 1 else "❌ NOT PLACED"
+    result_text = "PLACED" if prediction == 1 else "NOT PLACED"
     card_color  = "#1B5E20" if prediction == 1 else "#7f0000"
     badge_color = "#4CAF50" if prediction == 1 else "#F44336"
+    emoji       = "✅" if prediction == 1 else "❌"
 
     # ── Summary Card ──────────────────────────────────────────────────────────
     st.markdown("### 🪪 Student Summary Card")
     st.markdown(f"""
-    <div style="
-        background: linear-gradient(135deg, {card_color}, #1a1a2e);
-        border: 2px solid {badge_color};
-        border-radius: 16px;
-        padding: 24px 28px 10px 28px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    ">
+    <div style="background:linear-gradient(135deg,{card_color},#1a1a2e);
+                border:2px solid {badge_color}; border-radius:16px;
+                padding:24px 28px 10px 28px; box-shadow:0 4px 20px rgba(0,0,0,0.4);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <div>
                 <h2 style="margin:0; color:white; font-size:24px;">🎓 {name if name else 'Student'}</h2>
@@ -105,7 +104,7 @@ if st.button("🔮 Predict Placement", use_container_width=True):
             </div>
             <div style="background:{badge_color}; color:white; padding:8px 18px;
                         border-radius:20px; font-weight:bold; font-size:15px;">
-                {result_text}
+                {emoji} {result_text}
             </div>
         </div>
         <hr style="border-color:rgba(255,255,255,0.2); margin:12px 0 6px 0;">
@@ -154,90 +153,64 @@ if st.button("🔮 Predict Placement", use_container_width=True):
         marker=dict(colors=['#4CAF50', '#F44336'], line=dict(color='white', width=2)),
         textinfo='label+percent',
         textfont=dict(size=15, color='white'),
-        rotation=135,
-        direction='clockwise',
+        rotation=135, direction='clockwise',
     )])
     fig_pie.update_layout(
         title=dict(text=f"Placement Probability — {name if name else 'Student'}",
                    x=0.5, font=dict(size=15)),
         showlegend=True,
         legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"),
-        height=400,
-        margin=dict(t=60, b=80, l=20, r=20),
+        height=400, margin=dict(t=60, b=80, l=20, r=20),
         paper_bgcolor='rgba(0,0,0,0)',
     )
     st.plotly_chart(fig_pie, use_container_width=True)
 
     # ── Feature Impact Chart ───────────────────────────────────────────────────
     st.markdown("### 📉 Feature Impact Chart")
-    st.caption("Shows how each of your inputs compares to the ideal placement score (out of 10)")
-
-    # Normalize each feature to a 0-10 scale
-    feature_labels = [
-        'CGPA', '10th Marks', '12th Marks', 'Internships',
-        'Projects', 'Certifications', 'Skills Score',
-        'Communication', 'No Backlogs'
-    ]
+    feature_labels = ['CGPA','10th Marks','12th Marks','Internships',
+                      'Projects','Certifications','Skills Score','Communication','No Backlogs']
     raw_scores = [
-        (cgpa - 5) / 5 * 10,               # 5-10 → 0-10
-        (marks_10th - 50) / 50 * 10,        # 50-100 → 0-10
-        (marks_12th - 50) / 50 * 10,        # 50-100 → 0-10
-        internships / 3 * 10,               # 0-3 → 0-10
-        projects / 5 * 10,                  # 0-5 → 0-10
-        certifications / 4 * 10,            # 0-4 → 0-10
-        skills_score,                        # already 1-10
-        communication,                       # already 1-10
-        max(0, (4 - backlogs) / 4 * 10),    # 0 backlogs = 10, 4 backlogs = 0
+        (cgpa - 5) / 5 * 10,
+        (marks_10th - 50) / 50 * 10,
+        (marks_12th - 50) / 50 * 10,
+        internships / 3 * 10,
+        projects / 5 * 10,
+        certifications / 4 * 10,
+        skills_score,
+        communication,
+        max(0, (4 - backlogs) / 4 * 10),
     ]
     scores = [round(min(10, max(0, s)), 1) for s in raw_scores]
-    ideal  = [10] * len(scores)
-
-    # Color bars: green if >= 7, orange if >= 5, red if < 5
-    bar_colors = ['#4CAF50' if s >= 7 else '#FF9800' if s >= 5 else '#F44336'
-                  for s in scores]
+    bar_colors = ['#4CAF50' if s >= 7 else '#FF9800' if s >= 5 else '#F44336' for s in scores]
 
     fig_impact = go.Figure()
-
-    # Ideal line
     fig_impact.add_trace(go.Bar(
-        name='Ideal Score',
-        x=feature_labels,
-        y=ideal,
+        name='Ideal Score', x=feature_labels, y=[10]*len(scores),
         marker_color='rgba(255,255,255,0.1)',
         marker_line=dict(color='rgba(255,255,255,0.3)', width=1),
     ))
-
-    # Student scores
     fig_impact.add_trace(go.Bar(
-        name='Your Score',
-        x=feature_labels,
-        y=scores,
+        name='Your Score', x=feature_labels, y=scores,
         marker_color=bar_colors,
         marker_line=dict(color='white', width=1),
         text=[f"{s}" for s in scores],
         textposition='outside',
         textfont=dict(color='white', size=11),
     ))
-
     fig_impact.update_layout(
         barmode='overlay',
-        title=dict(
-            text=f"Feature Impact — {name if name else 'Student'}",
-            x=0.5, font=dict(size=15)
-        ),
+        title=dict(text=f"Feature Impact — {name if name else 'Student'}",
+                   x=0.5, font=dict(size=15)),
         xaxis=dict(tickangle=-25, tickfont=dict(size=11)),
         yaxis=dict(range=[0, 12], title="Score (0-10)"),
         legend=dict(orientation="h", y=-0.25, x=0.5, xanchor="center"),
-        height=420,
-        margin=dict(t=60, b=100, l=40, r=20),
+        height=420, margin=dict(t=60, b=100, l=40, r=20),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         yaxis_gridcolor='rgba(255,255,255,0.1)',
     )
-
     st.plotly_chart(fig_impact, use_container_width=True)
 
-    # Score legend
     col_g, col_o, col_r = st.columns(3)
     col_g.success("🟢 Strong (7-10)")
     col_o.warning("🟠 Average (5-6)")
@@ -245,19 +218,95 @@ if st.button("🔮 Predict Placement", use_container_width=True):
 
     # ── Advice ────────────────────────────────────────────────────────────────
     advice = []
-    if cgpa < 7.0:         advice.append("📈 Improve CGPA above 7.0")
-    if internships == 0:   advice.append("💼 Do at least 1 internship")
-    if skills_score < 7:   advice.append("💻 Increase technical skills")
-    if backlogs > 1:       advice.append("📚 Clear your backlogs")
-    if communication < 6:  advice.append("🗣️ Work on communication skills")
-    if projects < 2:       advice.append("🛠️ Build more projects (aim for 3+)")
+    if cgpa < 7.0:         advice.append("Improve CGPA above 7.0")
+    if internships == 0:   advice.append("Do at least 1 internship")
+    if skills_score < 7:   advice.append("Increase technical skills score")
+    if backlogs > 1:       advice.append("Clear your backlogs")
+    if communication < 6:  advice.append("Work on communication skills")
+    if projects < 2:       advice.append("Build more projects (aim for 3+)")
 
     st.markdown("### 💡 Improvement Advice")
     if advice:
         for tip in advice:
-            st.warning(tip)
+            st.warning(f"• {tip}")
     else:
         st.success("🌟 You look well-prepared! Keep it up.")
+
+    # ── Download Report ───────────────────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("### 📥 Download Report")
+
+    now = datetime.now().strftime("%d-%m-%Y %H:%M")
+    advice_text = "\n".join([f"  • {a}" for a in advice]) if advice else "  • You are well-prepared!"
+
+    report = f"""
+╔══════════════════════════════════════════════════════════╗
+║          STUDENT PLACEMENT PREDICTION REPORT            ║
+╚══════════════════════════════════════════════════════════╝
+
+Generated On  : {now}
+Model Used    : Logistic Regression
+Model Accuracy: 83%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STUDENT INFORMATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Name          : {name if name else 'N/A'}
+College       : {college if college else 'N/A'}
+Branch        : {branch}
+Gender        : {gender}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ACADEMIC PROFILE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CGPA          : {cgpa}
+10th Marks    : {marks_10th}%
+12th Marks    : {marks_12th}%
+Backlogs      : {backlogs}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SKILLS & EXPERIENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Internships   : {internships}
+Projects      : {projects}
+Certifications: {certifications}
+Skills Score  : {skills_score}/10
+Communication : {communication}/10
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PREDICTION RESULT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Result        : {emoji} {result_text}
+Placed        : {prob_placed:.1f}%
+Not Placed    : {prob_not_placed:.1f}%
+Placement Score: {int(prob_placed)}/100
+Readiness     : {level}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FEATURE SCORES (out of 10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{chr(10).join([f"  {feature_labels[i]:<18}: {scores[i]:>4}/10  {'✅' if scores[i]>=7 else '⚠️' if scores[i]>=5 else '❌'}" for i in range(len(scores))])}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPROVEMENT ADVICE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{advice_text}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Built with Python · scikit-learn · Streamlit · Plotly
+Internship Project — Student Placement Prediction System
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+
+    filename = f"placement_report_{(name if name else 'student').replace(' ','_')}.txt"
+
+    st.download_button(
+        label="📥 Download Placement Report",
+        data=report,
+        file_name=filename,
+        mime="text/plain",
+        use_container_width=True
+    )
 
 st.markdown("---")
 st.caption("Built with Python · scikit-learn · Streamlit · Plotly · Internship Project")
