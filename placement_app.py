@@ -1,6 +1,6 @@
 """
 STREAMLIT WEB APP — Student Placement Predictor
-With 3D Pie Chart + Summary Card
+With Summary Card + 3D Pie Chart
 """
 
 import os
@@ -25,7 +25,6 @@ def load_model():
         subprocess.run(['python', 'step1_generate_data.py'])
         subprocess.run(['python', 'step3_preprocess.py'])
         subprocess.run(['python', 'step4_train_models.py'])
-
     with open('models/preprocessed.pkl', 'rb') as f:
         data = pickle.load(f)
     with open('models/best_model.pkl', 'rb') as f:
@@ -84,84 +83,59 @@ if st.button("🔮 Predict Placement", use_container_width=True):
     else:                   level = "❌ Needs Improvement"
 
     result_text = "✅ PLACED" if prediction == 1 else "❌ NOT PLACED"
-    card_color  = "#1B5E20" if prediction == 1 else "#B71C1C"
+    card_color  = "#1B5E20" if prediction == 1 else "#7f0000"
     badge_color = "#4CAF50" if prediction == 1 else "#F44336"
 
-    # ── Summary Card ──────────────────────────────────────────────────────────
+    # ── Summary Card header ───────────────────────────────────────────────────
     st.markdown("### 🪪 Student Summary Card")
     st.markdown(f"""
     <div style="
         background: linear-gradient(135deg, {card_color}, #1a1a2e);
         border: 2px solid {badge_color};
         border-radius: 16px;
-        padding: 24px 28px;
-        margin-bottom: 24px;
+        padding: 24px 28px 10px 28px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     ">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <div>
                 <h2 style="margin:0; color:white; font-size:24px;">🎓 {name if name else 'Student'}</h2>
-                <p style="margin:4px 0 0 0; color:#ccc; font-size:14px;">🏫 {college if college else 'College'} &nbsp;|&nbsp; {branch} &nbsp;|&nbsp; {gender}</p>
+                <p style="margin:4px 0 0 0; color:#ccc; font-size:14px;">
+                    🏫 {college if college else 'College'} &nbsp;|&nbsp; {branch} &nbsp;|&nbsp; {gender}
+                </p>
             </div>
             <div style="
-                background:{badge_color};
-                color:white;
-                padding:8px 18px;
-                border-radius:20px;
-                font-weight:bold;
-                font-size:15px;
+                background:{badge_color}; color:white;
+                padding:8px 18px; border-radius:20px;
+                font-weight:bold; font-size:15px;
             ">{result_text}</div>
         </div>
-
-        <hr style="border-color:rgba(255,255,255,0.15); margin:12px 0;">
-
-        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px;">
-            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
-                <div style="font-size:22px; font-weight:bold; color:white;">{cgpa}</div>
-                <div style="color:#aaa; font-size:12px;">CGPA</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
-                <div style="font-size:22px; font-weight:bold; color:white;">{int(prob_placed)}%</div>
-                <div style="color:#aaa; font-size:12px;">Placement Score</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
-                <div style="font-size:22px; font-weight:bold; color:white;">{level}</div>
-                <div style="color:#aaa; font-size:12px;">Readiness</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
-                <div style="font-size:22px; font-weight:bold; color:white;">{internships}</div>
-                <div style="color:#aaa; font-size:12px;">Internships</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
-                <div style="font-size:22px; font-weight:bold; color:white;">{projects}</div>
-                <div style="color:#aaa; font-size:12px;">Projects</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
-                <div style="font-size:22px; font-weight:bold; color:white;">{skills_score}/10</div>
-                <div style="color:#aaa; font-size:12px;">Skills Score</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
-                <div style="font-size:22px; font-weight:bold; color:white;">{marks_10th}%</div>
-                <div style="color:#aaa; font-size:12px;">10th Marks</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
-                <div style="font-size:22px; font-weight:bold; color:white;">{marks_12th}%</div>
-                <div style="color:#aaa; font-size:12px;">12th Marks</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
-                <div style="font-size:22px; font-weight:bold; color:white;">{backlogs}</div>
-                <div style="color:#aaa; font-size:12px;">Backlogs</div>
-            </div>
-        </div>
-
-        <hr style="border-color:rgba(255,255,255,0.15); margin:16px 0 10px 0;">
+        <hr style="border-color:rgba(255,255,255,0.2); margin:12px 0 6px 0;">
         <p style="color:#aaa; font-size:12px; margin:0; text-align:right;">
-            🤖 Predicted by Logistic Regression &nbsp;|&nbsp; Accuracy: 83%
+            🤖 Logistic Regression &nbsp;|&nbsp; Accuracy: 83%
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Standard result ───────────────────────────────────────────────────────
+    # ── Summary Card stats (using st.columns) ─────────────────────────────────
+    st.markdown("<br>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    c1.metric("📊 CGPA",            f"{cgpa}")
+    c2.metric("🎯 Placement Score",  f"{int(prob_placed)}/100")
+    c3.metric("📈 Readiness",        level)
+
+    c4, c5, c6 = st.columns(3)
+    c4.metric("💼 Internships",      f"{internships}")
+    c5.metric("🛠️ Projects",         f"{projects}")
+    c6.metric("💻 Skills Score",     f"{skills_score}/10")
+
+    c7, c8, c9 = st.columns(3)
+    c7.metric("📝 10th Marks",       f"{marks_10th}%")
+    c8.metric("📝 12th Marks",       f"{marks_12th}%")
+    c9.metric("⚠️ Backlogs",         f"{backlogs}")
+
+    st.markdown("---")
+
+    # ── Prediction result ─────────────────────────────────────────────────────
     st.markdown("### 📊 Prediction Result")
     if prediction == 1:
         st.success(f"✅ **PLACED** — {prob_placed:.1f}% confidence")
@@ -186,7 +160,8 @@ if st.button("🔮 Predict Placement", use_container_width=True):
         direction='clockwise',
     )])
     fig.update_layout(
-        title=dict(text=f"Placement Probability — {name if name else 'Student'}", x=0.5, font=dict(size=15)),
+        title=dict(text=f"Placement Probability — {name if name else 'Student'}",
+                   x=0.5, font=dict(size=15)),
         showlegend=True,
         legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"),
         height=400,
