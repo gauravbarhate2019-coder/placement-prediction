@@ -1,6 +1,6 @@
 """
 STREAMLIT WEB APP — Student Placement Predictor
-With Summary Card + 3D Pie Chart
+With Summary Card + 3D Pie Chart + Feature Impact Chart
 """
 
 import os
@@ -86,7 +86,7 @@ if st.button("🔮 Predict Placement", use_container_width=True):
     card_color  = "#1B5E20" if prediction == 1 else "#7f0000"
     badge_color = "#4CAF50" if prediction == 1 else "#F44336"
 
-    # ── Summary Card header ───────────────────────────────────────────────────
+    # ── Summary Card ──────────────────────────────────────────────────────────
     st.markdown("### 🪪 Student Summary Card")
     st.markdown(f"""
     <div style="
@@ -103,11 +103,10 @@ if st.button("🔮 Predict Placement", use_container_width=True):
                     🏫 {college if college else 'College'} &nbsp;|&nbsp; {branch} &nbsp;|&nbsp; {gender}
                 </p>
             </div>
-            <div style="
-                background:{badge_color}; color:white;
-                padding:8px 18px; border-radius:20px;
-                font-weight:bold; font-size:15px;
-            ">{result_text}</div>
+            <div style="background:{badge_color}; color:white; padding:8px 18px;
+                        border-radius:20px; font-weight:bold; font-size:15px;">
+                {result_text}
+            </div>
         </div>
         <hr style="border-color:rgba(255,255,255,0.2); margin:12px 0 6px 0;">
         <p style="color:#aaa; font-size:12px; margin:0; text-align:right;">
@@ -116,22 +115,21 @@ if st.button("🔮 Predict Placement", use_container_width=True):
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Summary Card stats (using st.columns) ─────────────────────────────────
     st.markdown("<br>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
-    c1.metric("📊 CGPA",            f"{cgpa}")
-    c2.metric("🎯 Placement Score",  f"{int(prob_placed)}/100")
-    c3.metric("📈 Readiness",        level)
+    c1.metric("📊 CGPA",           f"{cgpa}")
+    c2.metric("🎯 Placement Score", f"{int(prob_placed)}/100")
+    c3.metric("📈 Readiness",       level)
 
     c4, c5, c6 = st.columns(3)
-    c4.metric("💼 Internships",      f"{internships}")
-    c5.metric("🛠️ Projects",         f"{projects}")
-    c6.metric("💻 Skills Score",     f"{skills_score}/10")
+    c4.metric("💼 Internships",    f"{internships}")
+    c5.metric("🛠️ Projects",       f"{projects}")
+    c6.metric("💻 Skills Score",   f"{skills_score}/10")
 
     c7, c8, c9 = st.columns(3)
-    c7.metric("📝 10th Marks",       f"{marks_10th}%")
-    c8.metric("📝 12th Marks",       f"{marks_12th}%")
-    c9.metric("⚠️ Backlogs",         f"{backlogs}")
+    c7.metric("📝 10th Marks",     f"{marks_10th}%")
+    c8.metric("📝 12th Marks",     f"{marks_12th}%")
+    c9.metric("⚠️ Backlogs",       f"{backlogs}")
 
     st.markdown("---")
 
@@ -149,7 +147,7 @@ if st.button("🔮 Predict Placement", use_container_width=True):
 
     # ── 3D Pie Chart ──────────────────────────────────────────────────────────
     st.markdown("### 🥧 3D Placement Probability Chart")
-    fig = go.Figure(data=[go.Pie(
+    fig_pie = go.Figure(data=[go.Pie(
         labels=['Placed', 'Not Placed'],
         values=[prob_placed, prob_not_placed],
         pull=[0.1, 0],
@@ -159,7 +157,7 @@ if st.button("🔮 Predict Placement", use_container_width=True):
         rotation=135,
         direction='clockwise',
     )])
-    fig.update_layout(
+    fig_pie.update_layout(
         title=dict(text=f"Placement Probability — {name if name else 'Student'}",
                    x=0.5, font=dict(size=15)),
         showlegend=True,
@@ -168,7 +166,82 @@ if st.button("🔮 Predict Placement", use_container_width=True):
         margin=dict(t=60, b=80, l=20, r=20),
         paper_bgcolor='rgba(0,0,0,0)',
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig_pie, use_container_width=True)
+
+    # ── Feature Impact Chart ───────────────────────────────────────────────────
+    st.markdown("### 📉 Feature Impact Chart")
+    st.caption("Shows how each of your inputs compares to the ideal placement score (out of 10)")
+
+    # Normalize each feature to a 0-10 scale
+    feature_labels = [
+        'CGPA', '10th Marks', '12th Marks', 'Internships',
+        'Projects', 'Certifications', 'Skills Score',
+        'Communication', 'No Backlogs'
+    ]
+    raw_scores = [
+        (cgpa - 5) / 5 * 10,               # 5-10 → 0-10
+        (marks_10th - 50) / 50 * 10,        # 50-100 → 0-10
+        (marks_12th - 50) / 50 * 10,        # 50-100 → 0-10
+        internships / 3 * 10,               # 0-3 → 0-10
+        projects / 5 * 10,                  # 0-5 → 0-10
+        certifications / 4 * 10,            # 0-4 → 0-10
+        skills_score,                        # already 1-10
+        communication,                       # already 1-10
+        max(0, (4 - backlogs) / 4 * 10),    # 0 backlogs = 10, 4 backlogs = 0
+    ]
+    scores = [round(min(10, max(0, s)), 1) for s in raw_scores]
+    ideal  = [10] * len(scores)
+
+    # Color bars: green if >= 7, orange if >= 5, red if < 5
+    bar_colors = ['#4CAF50' if s >= 7 else '#FF9800' if s >= 5 else '#F44336'
+                  for s in scores]
+
+    fig_impact = go.Figure()
+
+    # Ideal line
+    fig_impact.add_trace(go.Bar(
+        name='Ideal Score',
+        x=feature_labels,
+        y=ideal,
+        marker_color='rgba(255,255,255,0.1)',
+        marker_line=dict(color='rgba(255,255,255,0.3)', width=1),
+    ))
+
+    # Student scores
+    fig_impact.add_trace(go.Bar(
+        name='Your Score',
+        x=feature_labels,
+        y=scores,
+        marker_color=bar_colors,
+        marker_line=dict(color='white', width=1),
+        text=[f"{s}" for s in scores],
+        textposition='outside',
+        textfont=dict(color='white', size=11),
+    ))
+
+    fig_impact.update_layout(
+        barmode='overlay',
+        title=dict(
+            text=f"Feature Impact — {name if name else 'Student'}",
+            x=0.5, font=dict(size=15)
+        ),
+        xaxis=dict(tickangle=-25, tickfont=dict(size=11)),
+        yaxis=dict(range=[0, 12], title="Score (0-10)"),
+        legend=dict(orientation="h", y=-0.25, x=0.5, xanchor="center"),
+        height=420,
+        margin=dict(t=60, b=100, l=40, r=20),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        yaxis_gridcolor='rgba(255,255,255,0.1)',
+    )
+
+    st.plotly_chart(fig_impact, use_container_width=True)
+
+    # Score legend
+    col_g, col_o, col_r = st.columns(3)
+    col_g.success("🟢 Strong (7-10)")
+    col_o.warning("🟠 Average (5-6)")
+    col_r.error("🔴 Weak (0-4)")
 
     # ── Advice ────────────────────────────────────────────────────────────────
     advice = []
