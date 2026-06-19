@@ -1,6 +1,6 @@
 """
 STREAMLIT WEB APP — Student Placement Predictor
-With 3D Pie Chart using Plotly
+With 3D Pie Chart + Summary Card
 """
 
 import os
@@ -83,19 +83,91 @@ if st.button("🔮 Predict Placement", use_container_width=True):
     elif prob_placed >= 40: level = "⚠️ Average"
     else:                   level = "❌ Needs Improvement"
 
+    result_text = "✅ PLACED" if prediction == 1 else "❌ NOT PLACED"
+    card_color  = "#1B5E20" if prediction == 1 else "#B71C1C"
+    badge_color = "#4CAF50" if prediction == 1 else "#F44336"
+
+    # ── Summary Card ──────────────────────────────────────────────────────────
+    st.markdown("### 🪪 Student Summary Card")
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(135deg, {card_color}, #1a1a2e);
+        border: 2px solid {badge_color};
+        border-radius: 16px;
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    ">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div>
+                <h2 style="margin:0; color:white; font-size:24px;">🎓 {name if name else 'Student'}</h2>
+                <p style="margin:4px 0 0 0; color:#ccc; font-size:14px;">🏫 {college if college else 'College'} &nbsp;|&nbsp; {branch} &nbsp;|&nbsp; {gender}</p>
+            </div>
+            <div style="
+                background:{badge_color};
+                color:white;
+                padding:8px 18px;
+                border-radius:20px;
+                font-weight:bold;
+                font-size:15px;
+            ">{result_text}</div>
+        </div>
+
+        <hr style="border-color:rgba(255,255,255,0.15); margin:12px 0;">
+
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px;">
+            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
+                <div style="font-size:22px; font-weight:bold; color:white;">{cgpa}</div>
+                <div style="color:#aaa; font-size:12px;">CGPA</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
+                <div style="font-size:22px; font-weight:bold; color:white;">{int(prob_placed)}%</div>
+                <div style="color:#aaa; font-size:12px;">Placement Score</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
+                <div style="font-size:22px; font-weight:bold; color:white;">{level}</div>
+                <div style="color:#aaa; font-size:12px;">Readiness</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
+                <div style="font-size:22px; font-weight:bold; color:white;">{internships}</div>
+                <div style="color:#aaa; font-size:12px;">Internships</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
+                <div style="font-size:22px; font-weight:bold; color:white;">{projects}</div>
+                <div style="color:#aaa; font-size:12px;">Projects</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
+                <div style="font-size:22px; font-weight:bold; color:white;">{skills_score}/10</div>
+                <div style="color:#aaa; font-size:12px;">Skills Score</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
+                <div style="font-size:22px; font-weight:bold; color:white;">{marks_10th}%</div>
+                <div style="color:#aaa; font-size:12px;">10th Marks</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
+                <div style="font-size:22px; font-weight:bold; color:white;">{marks_12th}%</div>
+                <div style="color:#aaa; font-size:12px;">12th Marks</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center;">
+                <div style="font-size:22px; font-weight:bold; color:white;">{backlogs}</div>
+                <div style="color:#aaa; font-size:12px;">Backlogs</div>
+            </div>
+        </div>
+
+        <hr style="border-color:rgba(255,255,255,0.15); margin:16px 0 10px 0;">
+        <p style="color:#aaa; font-size:12px; margin:0; text-align:right;">
+            🤖 Predicted by Logistic Regression &nbsp;|&nbsp; Accuracy: 83%
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Standard result ───────────────────────────────────────────────────────
     st.markdown("### 📊 Prediction Result")
-    if name:    st.write(f"👨 Student : **{name}**")
-    if college: st.write(f"🏫 College : **{college}**")
-
-    st.info(f"Placement Readiness : {level}")
-    st.metric("🎯 Placement Score", f"{int(prob_placed)}/100")
-
     if prediction == 1:
         st.success(f"✅ **PLACED** — {prob_placed:.1f}% confidence")
     else:
         st.error(f"❌ **NOT PLACED** — {prob_placed:.1f}% placement chance")
 
-    st.markdown("**Placement Probability**")
     st.progress(int(prob_placed))
     col_a, col_b = st.columns(2)
     col_a.metric("Placed",     f"{prob_placed:.1f}%")
@@ -103,54 +175,24 @@ if st.button("🔮 Predict Placement", use_container_width=True):
 
     # ── 3D Pie Chart ──────────────────────────────────────────────────────────
     st.markdown("### 🥧 3D Placement Probability Chart")
-
     fig = go.Figure(data=[go.Pie(
         labels=['Placed', 'Not Placed'],
         values=[prob_placed, prob_not_placed],
         pull=[0.1, 0],
-        marker=dict(
-            colors=['#4CAF50', '#F44336'],
-            line=dict(color='white', width=2)
-        ),
+        marker=dict(colors=['#4CAF50', '#F44336'], line=dict(color='white', width=2)),
         textinfo='label+percent',
         textfont=dict(size=15, color='white'),
         rotation=135,
         direction='clockwise',
     )])
-
     fig.update_layout(
-        title=dict(
-            text=f"Placement Probability — {name if name else 'Student'}",
-            x=0.5,
-            font=dict(size=15)
-        ),
+        title=dict(text=f"Placement Probability — {name if name else 'Student'}", x=0.5, font=dict(size=15)),
         showlegend=True,
         legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"),
-        height=420,
+        height=400,
         margin=dict(t=60, b=80, l=20, r=20),
         paper_bgcolor='rgba(0,0,0,0)',
-        annotations=[dict(
-            text=f"<b>{int(prob_placed)}%</b><br>Placed",
-            x=0.5, y=0.5,
-            font=dict(size=18, color='white'),
-            showarrow=False
-        )]
     )
-
-    # 3D effect — add outer ring shadow
-    fig.add_trace(go.Pie(
-        labels=['Placed', 'Not Placed'],
-        values=[prob_placed, prob_not_placed],
-        pull=[0.1, 0],
-        marker=dict(colors=['#2E7D32', '#B71C1C'], line=dict(color='white', width=1)),
-        textinfo='none',
-        rotation=135,
-        direction='clockwise',
-        opacity=0.35,
-        domain=dict(x=[0.02, 0.98], y=[0.0, 0.07]),
-        showlegend=False
-    ))
-
     st.plotly_chart(fig, use_container_width=True)
 
     # ── Advice ────────────────────────────────────────────────────────────────
