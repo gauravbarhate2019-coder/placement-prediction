@@ -1,10 +1,11 @@
 """
-STREAMLIT WEB APP — JSPM University Placement Predictor
-With Summary Card + 3D Pie Chart + Feature Impact Chart + Download Report
+STREAMLIT WEB APP — Student Placement Predictor
+Kick to Tech | With Logo + Summary Card + 3D Pie + Feature Impact + Download
 """
 
 import os
 import io
+import base64
 import pickle
 import subprocess
 import numpy as np
@@ -13,7 +14,7 @@ import plotly.graph_objects as go
 from datetime import datetime
 
 st.set_page_config(
-    page_title="JSPM University Placement Predictor",
+    page_title="Student Placement Predictor | Kick to Tech",
     page_icon="🎓",
     layout="centered"
 )
@@ -33,37 +34,54 @@ def load_model():
         best = pickle.load(f)
     return data, best['model']
 
+def get_logo_base64():
+    try:
+        with open('logo.png', 'rb') as f:
+            return base64.b64encode(f.read()).decode()
+    except:
+        return None
+
 data, model = load_model()
 scaler    = data['scaler']
 le_branch = data['le_branch']
 le_gender = data['le_gender']
+logo_b64  = get_logo_base64()
 
-# ── Header with logo ──────────────────────────────────────────────────────────
-import base64
-from pathlib import Path
-
-def get_image_base64(path):
-    with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode()
-
-logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'jspm_logo.png')
-if os.path.exists(logo_path):
-    logo_b64 = get_image_base64(logo_path)
+# ── Header with Kick to Tech logo ─────────────────────────────────────────────
+if logo_b64:
     st.markdown(f"""
-    <div style="display:flex; align-items:center; gap:18px; margin-bottom:8px;">
-        <img src="data:image/png;base64,{logo_b64}" width="80" style="border-radius:6px;">
+    <div style="
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        background: linear-gradient(135deg, #0d7377, #14a085);
+        border-radius: 14px;
+        padding: 18px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    ">
+        <img src="data:image/png;base64,{logo_b64}"
+             style="width:90px; height:90px; border-radius:10px; object-fit:cover;"/>
         <div>
-            <h1 style="margin:0; font-size:26px;">🎓 JSPM University</h1>
-            <h3 style="margin:0; color:#aaa; font-size:16px; font-weight:400;">Student Placement Predictor</h3>
+            <h1 style="margin:0; color:white; font-size:26px; font-weight:bold;">
+                Kick to Tech
+            </h1>
+            <p style="margin:4px 0 0 0; color:#d0f0ec; font-size:14px;">
+                🎓 Student Placement Prediction System
+            </p>
+            <p style="margin:2px 0 0 0; color:#a8e6df; font-size:12px;">
+                Model: Logistic Regression &nbsp;|&nbsp; Accuracy: 83%
+            </p>
         </div>
     </div>
     """, unsafe_allow_html=True)
 else:
-    st.title("🎓 JSPM University — Student Placement Predictor")
+    st.title("🎓 Student Placement Predictor | Kick to Tech")
+    st.markdown("**Model:** Logistic Regression &nbsp;|&nbsp; **Accuracy:** 83%")
 
-st.markdown("**Model:** Logistic Regression &nbsp;|&nbsp; **Accuracy:** 83%")
 st.markdown("---")
 
+# ── Input form ────────────────────────────────────────────────────────────────
 st.subheader("📋 Enter Student Details")
 name    = st.text_input("Student Name")
 college = st.text_input("College Name")
@@ -113,23 +131,22 @@ if st.button("🔮 Predict Placement", use_container_width=True):
 
     # ── Summary Card ──────────────────────────────────────────────────────────
     st.markdown("### 🪪 Student Summary Card")
-    logo_html = ""
-    if os.path.exists(logo_path):
-        logo_html = f'<img src="data:image/png;base64,{logo_b64}" width="48" style="border-radius:4px; margin-right:10px; vertical-align:middle;">'
+    logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="width:40px;height:40px;border-radius:6px;vertical-align:middle;margin-right:8px;"/>' if logo_b64 else ""
     st.markdown(f"""
     <div style="background:linear-gradient(135deg,{card_color},#1a1a2e);
                 border:2px solid {badge_color}; border-radius:16px;
                 padding:24px 28px 10px 28px; box-shadow:0 4px 20px rgba(0,0,0,0.4);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div style="display:flex; align-items:center;">
-                {logo_html}
-                <div>
-                    <p style="margin:0; color:#ccc; font-size:11px; text-transform:uppercase; letter-spacing:1px;">JSPM University</p>
-                    <h2 style="margin:2px 0 0 0; color:white; font-size:22px;">🎓 {name if name else 'Student'}</h2>
-                    <p style="margin:4px 0 0 0; color:#ccc; font-size:13px;">
-                        🏫 {college if college else 'College'} &nbsp;|&nbsp; {branch} &nbsp;|&nbsp; {gender}
-                    </p>
-                </div>
+            <div>
+                <h2 style="margin:0; color:white; font-size:22px;">
+                    🎓 {name if name else 'Student'}
+                </h2>
+                <p style="margin:4px 0 0 0; color:#ccc; font-size:13px;">
+                    🏫 {college if college else 'College'} &nbsp;|&nbsp; {branch} &nbsp;|&nbsp; {gender}
+                </p>
+                <p style="margin:4px 0 0 0; color:#aaa; font-size:12px;">
+                    {logo_html} Kick to Tech Internship Project
+                </p>
             </div>
             <div style="background:{badge_color}; color:white; padding:8px 18px;
                         border-radius:20px; font-weight:bold; font-size:15px;">
@@ -264,71 +281,70 @@ if st.button("🔮 Predict Placement", use_container_width=True):
     # ── Download Report ───────────────────────────────────────────────────────
     st.markdown("---")
     st.markdown("### 📥 Download Report")
-
     now = datetime.now().strftime("%d-%m-%Y %H:%M")
     advice_text = "\n".join([f"  • {a}" for a in advice]) if advice else "  • You are well-prepared!"
 
     report = f"""
 ╔══════════════════════════════════════════════════════════╗
-║     JSPM UNIVERSITY — PLACEMENT PREDICTION REPORT      ║
+║          STUDENT PLACEMENT PREDICTION REPORT            ║
+║                   Kick to Tech                          ║
 ╚══════════════════════════════════════════════════════════╝
 
 Generated On  : {now}
 Model Used    : Logistic Regression
 Model Accuracy: 83%
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 STUDENT INFORMATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Name          : {name if name else 'N/A'}
 College       : {college if college else 'N/A'}
 Branch        : {branch}
 Gender        : {gender}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ACADEMIC PROFILE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CGPA          : {cgpa}
 10th Marks    : {marks_10th}%
 12th Marks    : {marks_12th}%
 Backlogs      : {backlogs}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SKILLS & EXPERIENCE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Internships   : {internships}
 Projects      : {projects}
 Certifications: {certifications}
 Skills Score  : {skills_score}/10
 Communication : {communication}/10
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PREDICTION RESULT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Result        : {emoji} {result_text}
 Placed        : {prob_placed:.1f}%
 Not Placed    : {prob_not_placed:.1f}%
 Placement Score: {int(prob_placed)}/100
 Readiness     : {level}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FEATURE SCORES (out of 10)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {chr(10).join([f"  {feature_labels[i]:<18}: {scores[i]:>4}/10  {'✅' if scores[i]>=7 else '⚠️' if scores[i]>=5 else '❌'}" for i in range(len(scores))])}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 IMPROVEMENT ADVICE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 {advice_text}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Kick to Tech | Student Placement Prediction System
 Built with Python · scikit-learn · Streamlit · Plotly
-JSPM University — Student Placement Prediction System
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
     filename = f"placement_report_{(name if name else 'student').replace(' ','_')}.txt"
-
     st.download_button(
         label="📥 Download Placement Report",
         data=report,
@@ -337,5 +353,14 @@ JSPM University — Student Placement Prediction System
         use_container_width=True
     )
 
+# ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("---")
-st.caption("JSPM University · Built with Python · scikit-learn · Streamlit · Plotly")
+if logo_b64:
+    st.markdown(f"""
+    <div style="display:flex; align-items:center; gap:10px; justify-content:center; opacity:0.7;">
+        <img src="data:image/png;base64,{logo_b64}" style="width:28px; height:28px; border-radius:4px;"/>
+        <span style="color:#aaa; font-size:12px;">Kick to Tech · Student Placement Prediction · Built with Python & Streamlit</span>
+    </div>
+    """, unsafe_allow_html=True)
+else:
+    st.caption("Kick to Tech · Built with Python · scikit-learn · Streamlit · Plotly")
